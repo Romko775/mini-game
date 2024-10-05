@@ -7,7 +7,7 @@
     <div class="config">
       <label>
         Time limit (ms):
-        <input type="number" formControlName="timeLimit" [formControl]="timeLimit">
+        <input type="number" [formControl]="timeLimit">
       </label>
     </div>
     <button class="start-btn" [disabled]="timeLimit.invalid" (click)="startGame()">Start</button>
