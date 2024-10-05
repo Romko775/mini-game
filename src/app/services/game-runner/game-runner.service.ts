@@ -3,7 +3,7 @@ import {debounceTime, filter, share, Subject, Subscription, tap} from "rxjs";
 import {GameEvents, GameStates} from "../../core/enums";
 
 interface IGameConfig {
-  timeLimit: number;
+  timeLimit?: number;
 }
 
 @Injectable({
@@ -38,6 +38,10 @@ export class GameRunnerService {
 
   public get range(): number[] {
     return this._range;
+  }
+
+  public get activeCell(): { x: number, y: number } | null {
+    return this._activeCell;
   }
 
   public getCellState(x: number, y: number): GameStates | null | undefined {
@@ -134,7 +138,6 @@ export class GameRunnerService {
 
   private checkGameStatus(): void {
     if (this._playerScore() >= 10 || this._computerScore() >= 10) {
-      console.log('Game end');
       this._gameEvents.next(GameEvents.GameEnded);
       this._gameSub?.unsubscribe();
       return;
