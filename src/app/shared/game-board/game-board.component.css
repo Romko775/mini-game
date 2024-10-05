@@ -10,21 +10,19 @@
   height: 100%;
   border: 1px solid var(--border);
   box-sizing: border-box;
+  background: var(--primary);
 }
 
 .point {
   background: var(--success);
   cursor: not-allowed;
 }
+
 .lost {
   background: var(--danger);
   cursor: not-allowed;
 }
+
 .pending {
   background: var(--warning);
-  cursor: pointer;
-}
-.default {
-  background: var(--primary);
-  cursor: pointer;
 }

@@ -1,6 +1,8 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, input, OnInit} from '@angular/core';
-import {GameStates} from "../../core/enums";
-import {debounceTime, filter, map, Subject, Subscription, tap} from "rxjs";
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, effect, inject, input} from '@angular/core';
+import {GameRunnerService} from "../../services/game-runner/game-runner.service";
+import {GameEvents, GameStates} from "../../core/enums";
+import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
+import {filter, tap} from "rxjs";
 
 @Component({
   selector: 'app-game-board',
@@ -10,110 +12,56 @@ import {debounceTime, filter, map, Subject, Subscription, tap} from "rxjs";
   styleUrl: './game-board.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class GameBoardComponent implements OnInit {
-  private readonly defaultSideCount = 10;
-  private readonly defaultTimeLimit = 1000;
-
+export class GameBoardComponent {
+  private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
 
-  private activeCell: { x: number, y: number } | null = null;
-  private roundStart = new Subject<void>();
-  private gameSub: Subscription | null = null;
-  private board = new Map();
+  private gameRunnerService = inject(GameRunnerService);
 
-  public sideCount = input<number>(this.defaultSideCount);
-  public timeLimit = input<number>(this.defaultTimeLimit);
+  public sideCount = input<number>(this.gameRunnerService.defaultSideCount);
+  public timeLimit = input<number>(this.gameRunnerService.defaultTimeLimit);
 
-  protected range = computed(() => [...Array(this.sideCount() || this.defaultSideCount).keys()]);
+  private readonly _redrawEvents = [GameEvents.BoardUpdated];
 
-  protected playerScore = 0;
-  protected computerScore = 0;
+  constructor() {
+    effect(() => {
+      this.gameRunnerService.initBoard({
+        sideCount: this.sideCount(),
+        timeLimit: this.timeLimit()
+      });
+    });
 
-
-  public ngOnInit() {
-    this.resetBoard();
+    this.gameRunnerService.gameEvents
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        filter(e => this._redrawEvents.includes(e)),
+        tap(() => this.cdr.markForCheck())
+      )
+      .subscribe();
   }
 
-  public getCellState(x: number, y: number): GameStates | undefined {
-    return this.board.get(this.getBoardCellKey(x, y));
+  public get playerScore(): number {
+    return this.gameRunnerService.playerScore;
   }
 
-  public onCellClick(x: number, y: number): void {
-    if (this.getCellState(x, y) !== GameStates.Pending) return;
-    this.setCellState(x, y, GameStates.Point);
-    this.playerScore++;
-    this.checkGameStatus();
+  public get computerScore(): number {
+    return this.gameRunnerService.computerScore;
+  }
+
+  public get range(): number[] {
+    return this.gameRunnerService.range;
+  }
+
+  public getCellState(x: number, y: number): GameStates | null | undefined {
+    return this.gameRunnerService.getCellState(x, y);
   }
 
   public startGame(): void {
-    this.resetScore();
-    this.resetBoard();
-
-    this.gameSub?.unsubscribe();
-    this.gameSub = this.roundStart.asObservable()
-      .pipe(
-        debounceTime(this.timeLimit()),
-        map(() => this.activeCell),
-        filter(Boolean),
-        tap(({x, y}) => {
-          if (this.getCellState(x, y) === GameStates.Pending) {
-            this.setCellState(x, y, GameStates.Lost);
-            this.computerScore++;
-          }
-          this.cdr.markForCheck();
-          this.checkGameStatus();
-        })
-      )
-      .subscribe();
-
-    this.runGame();
+    this.gameRunnerService.startGame();
   }
 
-  public runGame(): void {
-
-    const availableCells = Array.from(this.board.keys()).filter(key => this.board.get(key) === GameStates.Default);
-    const nextCell = availableCells[Math.floor(Math.random() * availableCells.length)];
-    const [x, y] = this.getBoardCoordsFromKey(nextCell);
-    this.setCellState(x, y, GameStates.Pending);
-    this.activeCell = {x, y};
-    this.roundStart.next();
+  public onCellClick(x: number, y: number): void {
+    this.gameRunnerService.onCellClick(x, y);
   }
 
-  checkGameStatus(): void {
-    if (this.playerScore >= 10 || this.computerScore >= 10) {
-      console.log('Game end');
-      this.gameSub?.unsubscribe();
-    } else {
-      this.runGame();
-    }
-  }
-
-  /**
-   * Private methods
-   */
-
-  private getBoardCellKey(x: number, y: number): string {
-    return `${x}:${y}`;
-  }
-
-  private getBoardCoordsFromKey(key: string): number[] {
-    return key.split(':').map(Number);
-  }
-
-  private resetScore(): void {
-    this.playerScore = 0;
-    this.computerScore = 0;
-  }
-
-  private resetBoard(): void {
-    this.range().forEach((i) => {
-      this.range().forEach((j) => {
-        this.setCellState(i, j, GameStates.Default);
-      });
-    });
-  }
-
-  private setCellState(x: number, y: number, state: GameStates): void {
-    this.board.set(this.getBoardCellKey(x, y), state);
-  }
 }

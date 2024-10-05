@@ -3,9 +3,9 @@
   <p>{{ playerScore }} - {{ computerScore }}</p>
 </div>
 <section class="board">
-  @for (i of range(); track i) {
+  @for (i of range; track i) {
     <div class="row">
-      @for (j of range(); track j) {
+      @for (j of range; track j) {
         <div class="cell {{ getCellState(i, j) }}"
              (click)="onCellClick(i, j)"
         ></div>
