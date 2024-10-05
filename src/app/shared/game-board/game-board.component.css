@@ -1,0 +1,30 @@
+.board {
+  --cell-size: 50px;
+  display: grid;
+  grid-template-columns: repeat(10, var(--cell-size));
+  grid-template-rows: repeat(10, var(--cell-size));
+}
+
+.cell {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--border);
+  box-sizing: border-box;
+}
+
+.point {
+  background: var(--success);
+  cursor: not-allowed;
+}
+.lost {
+  background: var(--danger);
+  cursor: not-allowed;
+}
+.pending {
+  background: var(--warning);
+  cursor: pointer;
+}
+.default {
+  background: var(--primary);
+  cursor: pointer;
+}

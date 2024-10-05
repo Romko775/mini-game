@@ -1,0 +1,11 @@
+<section class="board">
+  @for (row of board; track row; let i = $index) {
+    <div class="row">
+      @for (cell of row; track cell; let j = $index) {
+        <div class="cell {{ cell }}"
+             (click)="onCellClick(i, j)"
+        >{{i}} {{j}}</div>
+      }
+    </div>
+  }
+</section>
