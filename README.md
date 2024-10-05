@@ -2,6 +2,13 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.1.1.
 
+## License
+
+Please read [License Agreement](LICENSE.md).
+
+By using the Software, you acknowledge that you have read this License Agreement and agree to its terms.
+
+
 ## Development server
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
