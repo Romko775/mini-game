@@ -2,8 +2,7 @@ import {Injectable} from '@angular/core';
 import {debounceTime, filter, map, share, Subject, Subscription, tap} from "rxjs";
 import {GameEvents, GameStates} from "../../core/enums";
 
-interface IBoardConfig {
-  sideCount: number;
+interface IGameConfig {
   timeLimit: number;
 }
 
@@ -11,8 +10,8 @@ interface IBoardConfig {
   providedIn: 'root'
 })
 export class GameRunnerService {
-  public readonly defaultSideCount = 10;
   public readonly defaultTimeLimit = 1000;
+  public readonly sideCount = 10;
 
   private _playerScore = 0;
   private _computerScore = 0;
@@ -25,7 +24,6 @@ export class GameRunnerService {
   private _gameEvents = new Subject<GameEvents>();
   public gameEvents = this._gameEvents.asObservable().pipe(share());
 
-  private _sideCount = this.defaultSideCount;
   private _timeLimit = this.defaultTimeLimit;
 
   private _range: number[] = [];
@@ -46,24 +44,27 @@ export class GameRunnerService {
     return this._board.get(this.getBoardCellKey(x, y));
   }
 
-  public initBoard(config: IBoardConfig): void {
-    this._sideCount = config.sideCount || this.defaultSideCount;
-    this._timeLimit = config.timeLimit || this.defaultTimeLimit;
-    this.resetBoard();
-  }
-
-  protected resetBoard(): void {
-    this._range = this.createRange(this._sideCount);
+  public initBoard(): void {
+    this._range = this.createRange(this.sideCount);
     this._range.forEach((i) => {
       this._range.forEach((j) => {
         this.setCellState(i, j, null);
       });
     });
+  }
+
+  protected resetBoard(): void {
     this._gameSub?.unsubscribe();
+    this._board.clear();
+    this.initBoard();
     this._gameEvents.next(GameEvents.BoardUpdated);
   }
 
-  public startGame(): void {
+  public startGame(config: IGameConfig): void {
+    this._timeLimit = (config.timeLimit && typeof config.timeLimit === "number")
+      ? config.timeLimit
+      : this.defaultTimeLimit;
+
     this.resetScore();
     this.resetBoard();
 
@@ -72,16 +73,7 @@ export class GameRunnerService {
       .pipe(
         filter((e) => e === GameEvents.RoundStart),
         debounceTime(this._timeLimit),
-        map(() => this._activeCell),
-        filter(Boolean),
-        tap(({x, y}) => {
-          if (this.getCellState(x, y) === GameStates.Pending) {
-            this.setCellState(x, y, GameStates.Lost);
-            this._computerScore++;
-          }
-          this._gameEvents.next(GameEvents.BoardUpdated);
-          this.checkGameStatus();
-        })
+        tap(() => this.handleGameRoundTimeout()),
       )
       .subscribe();
 
@@ -127,6 +119,17 @@ export class GameRunnerService {
 
   private setCellState(x: number, y: number, state: GameStates | null): void {
     this._board.set(this.getBoardCellKey(x, y), state);
+  }
+
+  private handleGameRoundTimeout(): void {
+    if (!this._activeCell) return;
+    const {x,y} = this._activeCell;
+    if (this.getCellState(x, y) === GameStates.Pending) {
+      this.setCellState(x, y, GameStates.Lost);
+      this._computerScore++;
+    }
+    this._gameEvents.next(GameEvents.BoardUpdated);
+    this.checkGameStatus();
   }
 
   private checkGameStatus(): void {

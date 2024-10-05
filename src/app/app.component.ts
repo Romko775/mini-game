@@ -1,14 +1,30 @@
-import { Component } from '@angular/core';
+import {Component, inject} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import {GameBoardComponent} from "./shared/game-board/game-board.component";
+import {GameScoreComponent} from "./shared/game-score/game-score.component";
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
+import {GameRunnerService} from "./services/game-runner/game-runner.service";
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, GameBoardComponent],
+  imports: [RouterOutlet, GameBoardComponent, GameScoreComponent, ReactiveFormsModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
 export class AppComponent {
   title = 'mini-game';
+
+  private gameRunnerService = inject(GameRunnerService);
+
+  timeLimit = new FormControl<number>(this.gameRunnerService.defaultTimeLimit, {
+    nonNullable: true,
+    validators: [Validators.required]
+  });
+
+  public startGame(): void {
+    this.gameRunnerService.startGame({
+      timeLimit: this.timeLimit.value
+    });
+  }
 }

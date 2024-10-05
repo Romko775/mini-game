@@ -1,0 +1,22 @@
+.container {
+ width: max-content;
+  margin: 0 auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin: 20px;
+}
+
+.config {
+  margin-bottom: 20px;
+}
+
+.start-btn {
+  border: none;
+  width: 100%;
+  padding: 20px;
+}

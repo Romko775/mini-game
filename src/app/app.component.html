@@ -1,3 +1,16 @@
 <main>
-  <app-game-board></app-game-board>
+  <div class="container">
+    <div class="field">
+      <app-game-score></app-game-score>
+      <app-game-board></app-game-board>
+    </div>
+    <div class="config">
+      <label>
+        Time limit (ms):
+        <input type="number" formControlName="timeLimit" [formControl]="timeLimit">
+      </label>
+    </div>
+    <button class="start-btn" [disabled]="timeLimit.invalid" (click)="startGame()">Start</button>
+  </div>
+
 </main>

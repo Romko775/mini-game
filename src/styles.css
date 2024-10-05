@@ -5,3 +5,8 @@
   --primary: #0000FF;
   --border: #808080;
 }
+
+* {
+  margin: 0;
+  padding: 0;
+}
