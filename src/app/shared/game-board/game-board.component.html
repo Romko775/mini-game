@@ -1,11 +1,17 @@
+<div>
+  <p>Counter | P - C</p>
+  <p>{{ playerScore }} - {{ computerScore }}</p>
+</div>
 <section class="board">
-  @for (row of board; track row; let i = $index) {
+  @for (row of board; let i = $index; track i) {
     <div class="row">
-      @for (cell of row; track cell; let j = $index) {
+      @for (cell of row; let j = $index; track j) {
         <div class="cell {{ cell }}"
              (click)="onCellClick(i, j)"
-        >{{i}} {{j}}</div>
+        ></div>
       }
     </div>
   }
 </section>
+
+<button (click)="startGame()">Start</button>
