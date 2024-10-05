@@ -10,13 +10,5 @@ import {GameRunnerService} from "../../services/game-runner/game-runner.service"
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GameScoreComponent {
-  private gameRunnerService = inject(GameRunnerService);
-
-  public get playerScore(): number {
-    return this.gameRunnerService.playerScore;
-  }
-
-  public get computerScore(): number {
-    return this.gameRunnerService.computerScore;
-  }
+  protected gameRunnerService = inject(GameRunnerService);
 }

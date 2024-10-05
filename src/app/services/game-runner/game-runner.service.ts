@@ -1,5 +1,5 @@
-import {Injectable} from '@angular/core';
-import {debounceTime, filter, map, share, Subject, Subscription, tap} from "rxjs";
+import {Injectable, Signal, signal} from '@angular/core';
+import {debounceTime, filter, share, Subject, Subscription, tap} from "rxjs";
 import {GameEvents, GameStates} from "../../core/enums";
 
 interface IGameConfig {
@@ -13,8 +13,8 @@ export class GameRunnerService {
   public readonly defaultTimeLimit = 1000;
   public readonly sideCount = 10;
 
-  private _playerScore = 0;
-  private _computerScore = 0;
+  private _playerScore = signal(0);
+  private _computerScore = signal(0);
 
   private _activeCell: { x: number, y: number } | null = null;
   private _board = new Map();
@@ -28,11 +28,11 @@ export class GameRunnerService {
 
   private _range: number[] = [];
 
-  public get playerScore(): number {
+  public get playerScore(): Signal<number> {
     return this._playerScore;
   }
 
-  public get computerScore(): number {
+  public get computerScore(): Signal<number> {
     return this._computerScore;
   }
 
@@ -92,7 +92,7 @@ export class GameRunnerService {
   public onCellClick(x: number, y: number): void {
     if (this.getCellState(x, y) !== GameStates.Pending) return;
     this.setCellState(x, y, GameStates.Point);
-    this._playerScore++;
+    this._playerScore.update(v => v + 1);
     this.checkGameStatus();
   }
 
@@ -109,8 +109,8 @@ export class GameRunnerService {
   }
 
   private resetScore(): void {
-    this._playerScore = 0;
-    this._computerScore = 0;
+    this._playerScore.set(0);
+    this._computerScore.set(0);
   }
 
   private createRange(sideCount: number): number[] {
@@ -123,17 +123,17 @@ export class GameRunnerService {
 
   private handleGameRoundTimeout(): void {
     if (!this._activeCell) return;
-    const {x,y} = this._activeCell;
+    const {x, y} = this._activeCell;
     if (this.getCellState(x, y) === GameStates.Pending) {
       this.setCellState(x, y, GameStates.Lost);
-      this._computerScore++;
+      this._computerScore.update(v => v + 1);
     }
     this._gameEvents.next(GameEvents.BoardUpdated);
     this.checkGameStatus();
   }
 
   private checkGameStatus(): void {
-    if (this._playerScore >= 10 || this._computerScore >= 10) {
+    if (this._playerScore() >= 10 || this._computerScore() >= 10) {
       console.log('Game end');
       this._gameEvents.next(GameEvents.GameEnded);
       this._gameSub?.unsubscribe();
