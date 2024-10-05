@@ -1,0 +1,14 @@
+.score {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+p {
+  text-align: center;
+}
+
+p:nth-child(1) {
+  margin-bottom: 6px;
+}

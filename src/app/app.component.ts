@@ -4,6 +4,7 @@ import {GameBoardComponent} from "./shared/game-board/game-board.component";
 import {GameScoreComponent} from "./shared/game-score/game-score.component";
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
 import {GameRunnerService} from "./services/game-runner/game-runner.service";
+import {validNumberValidator} from "./core/validators";
 
 @Component({
   selector: 'app-root',
@@ -19,7 +20,7 @@ export class AppComponent {
 
   timeLimit = new FormControl<number>(this.gameRunnerService.defaultTimeLimit, {
     nonNullable: true,
-    validators: [Validators.required]
+    validators: [Validators.required, Validators.min(1), validNumberValidator]
   });
 
   public startGame(): void {
