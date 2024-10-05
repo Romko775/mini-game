@@ -1,6 +1,6 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, input, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, input, OnInit} from '@angular/core';
 import {GameStates} from "../../core/enums";
-import {debounceTime, filter, interval, map, Subject, Subscription, take, tap} from "rxjs";
+import {debounceTime, filter, map, Subject, Subscription, tap} from "rxjs";
 
 @Component({
   selector: 'app-game-board',
@@ -12,29 +12,35 @@ import {debounceTime, filter, interval, map, Subject, Subscription, take, tap} f
 })
 export class GameBoardComponent implements OnInit {
   private readonly defaultSideCount = 10;
+  private readonly defaultTimeLimit = 1000;
 
   private cdr = inject(ChangeDetectorRef);
 
-  private activeCell: { row: number, col: number } | null = null;
+  private activeCell: { x: number, y: number } | null = null;
   private roundStart = new Subject<void>();
   private gameSub: Subscription | null = null;
-
-  protected board: GameStates[][] = [];
+  private board = new Map();
 
   public sideCount = input<number>(this.defaultSideCount);
+  public timeLimit = input<number>(this.defaultTimeLimit);
 
+  protected range = computed(() => [...Array(this.sideCount() || this.defaultSideCount).keys()]);
 
-  playerScore: number = 0;
-  computerScore: number = 0;
-  timeLimit: number = 3000;
+  protected playerScore = 0;
+  protected computerScore = 0;
+
 
   public ngOnInit() {
     this.resetBoard();
   }
 
-  public onCellClick(row: number, col: number): void {
-    if (this.board[row][col] !== GameStates.Pending) return;
-    this.board[row][col] = GameStates.Point;
+  public getCellState(x: number, y: number): GameStates | undefined {
+    return this.board.get(this.getBoardCellKey(x, y));
+  }
+
+  public onCellClick(x: number, y: number): void {
+    if (this.getCellState(x, y) !== GameStates.Pending) return;
+    this.setCellState(x, y, GameStates.Point);
     this.playerScore++;
     this.checkGameStatus();
   }
@@ -46,12 +52,12 @@ export class GameBoardComponent implements OnInit {
     this.gameSub?.unsubscribe();
     this.gameSub = this.roundStart.asObservable()
       .pipe(
-        debounceTime(this.timeLimit),
+        debounceTime(this.timeLimit()),
         map(() => this.activeCell),
         filter(Boolean),
-        tap(({row, col}) => {
-          if (this.board[row][col] === GameStates.Pending) {
-            this.board[row][col] = GameStates.Lost;
+        tap(({x, y}) => {
+          if (this.getCellState(x, y) === GameStates.Pending) {
+            this.setCellState(x, y, GameStates.Lost);
             this.computerScore++;
           }
           this.cdr.markForCheck();
@@ -64,17 +70,12 @@ export class GameBoardComponent implements OnInit {
   }
 
   public runGame(): void {
-    const randomRow = Math.floor(Math.random() * 10);
-    const randomCol = Math.floor(Math.random() * 10);
 
-    // Перевірка, чи комірка вже була натиснута, якщо так, шукаємо іншу
-    if (this.board[randomRow][randomCol] !== GameStates.Default) {
-      this.runGame();
-      return;
-    }
-
-    this.board[randomRow][randomCol] = GameStates.Pending;
-    this.activeCell = {row: randomRow, col: randomCol};
+    const availableCells = Array.from(this.board.keys()).filter(key => this.board.get(key) === GameStates.Default);
+    const nextCell = availableCells[Math.floor(Math.random() * availableCells.length)];
+    const [x, y] = this.getBoardCoordsFromKey(nextCell);
+    this.setCellState(x, y, GameStates.Pending);
+    this.activeCell = {x, y};
     this.roundStart.next();
   }
 
@@ -91,15 +92,28 @@ export class GameBoardComponent implements OnInit {
    * Private methods
    */
 
+  private getBoardCellKey(x: number, y: number): string {
+    return `${x}:${y}`;
+  }
+
+  private getBoardCoordsFromKey(key: string): number[] {
+    return key.split(':').map(Number);
+  }
+
   private resetScore(): void {
     this.playerScore = 0;
     this.computerScore = 0;
   }
 
   private resetBoard(): void {
-    const size = this.sideCount() || this.defaultSideCount;
-    this.board = Array(size)
-      .fill(null)
-      .map(() => Array(size).fill(GameStates.Default));
+    this.range().forEach((i) => {
+      this.range().forEach((j) => {
+        this.setCellState(i, j, GameStates.Default);
+      });
+    });
+  }
+
+  private setCellState(x: number, y: number, state: GameStates): void {
+    this.board.set(this.getBoardCellKey(x, y), state);
   }
 }
