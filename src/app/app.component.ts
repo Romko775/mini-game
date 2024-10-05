@@ -17,8 +17,6 @@ import {ModalService} from "./services/modal/modal.service";
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {
-  title = 'mini-game';
-
   private modal = inject(ModalService);
   private gameRunnerService = inject(GameRunnerService);
 
