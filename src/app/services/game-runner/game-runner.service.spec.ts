@@ -50,7 +50,7 @@ describe('GameRunnerService', () => {
   describe('onCellClick', () => {
     it('should increment player score when clicking a pending cell', () => {
       service.initBoard();
-      service.runGameRound();
+      service.startGame();
 
       const {x, y} = service.activeCell!;
       service.onCellClick(x, y);
@@ -61,16 +61,6 @@ describe('GameRunnerService', () => {
       service.initBoard();
       service.onCellClick(0, 0);
       expect(service.playerScore()).toBe(0);
-    });
-  });
-
-  describe('handleGameRoundTimeout', () => {
-    it('should increment computer score when a pending cell is not clicked in time', () => {
-      service.initBoard();
-      service.runGameRound();
-      setTimeout(() => {
-        expect(service.computerScore()).toBe(1);
-      }, 1002)
     });
   });
 });

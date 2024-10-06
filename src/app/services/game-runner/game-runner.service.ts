@@ -72,8 +72,8 @@ export class GameRunnerService {
   /**
    * @desc Start game. If time limit not set or invalid it would use default value.
    */
-  public startGame(config: IGameConfig): void {
-    this._timeLimit = (config.timeLimit && typeof config.timeLimit === "number")
+  public startGame(config?: IGameConfig): void {
+    this._timeLimit = (config?.timeLimit && typeof config.timeLimit === "number")
       ? config.timeLimit
       : this.defaultTimeLimit;
 
