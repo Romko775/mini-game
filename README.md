@@ -8,6 +8,9 @@ Please read [License Agreement](LICENSE.md).
 
 By using the Software, you acknowledge that you have read this License Agreement and agree to its terms.
 
+## Docker
+
+Run `./run.sh` script for docker prod build at [`http://localhost:8080`](http://localhost:8080)
 
 ## Development server
 
