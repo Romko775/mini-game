@@ -12,6 +12,9 @@ export class ModalService {
   private componentFactoryResolver = inject(ComponentFactoryResolver);
   private injector = inject(Injector);
 
+  /**
+   * @desc Open modal instance with message.
+   */
   open(msg?: string) {
     if (this.isOpen) return;
 
@@ -32,6 +35,9 @@ export class ModalService {
       });
   }
 
+  /**
+   * @desc Closes modal instance.
+   */
   close() {
     if (!this.isOpen) return;
     this.appRef.detachView(this.componentRef.hostView);
